@@ -66,5 +66,37 @@ def assign_y_coord(row):
     if row.zone in [7,8,9]:
         return 1
 
+def prediction_and_evaluation():
+	judge_filtered = pd.read_csv('datasets/statcast/judge.csv', usecols=['release_speed', 'hit_distance_sc', 'launch_speed', 'launch_angle'])
+	judge_filtered = judge_filtered.dropna(axis=0)
+	y = judge_filtered.hit_distance_sc
+	judge_features = ['release_speed', 'launch_speed', 'launch_angle']
+	X = judge_filtered[judge_features]
+	
+	# Define model. Specify a number for random_state to ensure same results each run
+	judge_model = DecisionTreeRegressor(random_state=1)
+
+	# Fit model
+	judge_model.fit(X, y)
+	
+	print("Making predictions for the following 5 hits:")
+	print(X.head())
+	print("The predictions are")
+	print(judge_model.predict(X.head()))
+	
+	# split data into training and validation data, for both features and target
+	# The split is based on a random number generator. Supplying a numeric value to
+	# the random_state argument guarantees we get the same split every time we
+	# run this script.
+	train_X, val_X, train_y, val_y = train_test_split(X, y, random_state = 0)
+	# Define model
+	judge_model = DecisionTreeRegressor()
+	# Fit model
+	judge_model.fit(train_X, train_y)
+
+	# get predicted prices on validation data
+	val_predictions = judge_model.predict(val_X)
+	print(mean_absolute_error(val_y, val_predictions))
+	
 
 main()
